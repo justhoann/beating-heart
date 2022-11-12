@@ -49,15 +49,21 @@
 	</head>
 
 	<body>
-		<audio autoplay="true" loop="true">
+		<audio controls id="music">
 			<source src="nhac.mp3" type="audio/mp3" />
 		</audio>
 
 
 		<canvas id="pinkboard"></canvas>
-		<h1>Yêu sói</h1>
+		<h1 onclick="handlePlayMusic()">Yêu sói</h1>
 		<script>
 			//comment
+			function handlePlayMusic() {
+				const musicElement = document.getElementById("music");
+				console.dir(musicElement);
+				musicElement.play();
+			}
+
 			var settings = {
 				particles: {
 					length: 500, // maximum amount of particles
