@@ -3,7 +3,7 @@
 <html>
 	<head>
 		<title>Hưng</title>
-		<meta charset="utf-8" />
+
 		<meta name="Generator" content="EditPlus" />
 
 		<meta name="Author" content="" />
@@ -12,57 +12,153 @@
 
 		<meta name="Description" content="" />
 
-		<style>
-			html,
-			body {
-				height: 100%;
-
-				padding: 0;
-
-				margin: 0;
-
-				background: #000;
-				position: relative;
-			}
-
-			canvas {
-				position: absolute;
-
-				width: 100%;
-
-				height: 100%;
-			}
-
-			h1 {
-				position: sticky;
-				top: 45vh;
-				text-align: center;
-				color: white;
-				font-family: "Franklin Gothic Medium", "Arial Narrow", Arial,
-					sans-serif;
-			}
-	
-			audio {
-					display: none;
-			}
-		</style>
+		<link rel="stylesheet" href="style.css" />
 	</head>
+	<style>
+		@import url("https://fonts.googleapis.com/css?family=Raleway:900&display=swap");
 
+		html,
+		body {
+			position: relative;
+			height: 100%;
+			padding: 0;
+			margin: 0;
+			background: rgb(10, 10, 3);
+		}
+
+		#text1,
+		#text2 {
+			position: absolute;
+			top: 45%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			color: pink;
+			font-family: "Raleway", sans-serif;
+			font-size: 35pt;
+		}
+
+		canvas {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+		}
+		audio {
+			display: none;
+		}
+	</style>
 	<body>
+		<p id="text1"></p>
+		<p id="text2"></p>
 		<audio controls id="music">
 			<source src="nhac.mp3" type="audio/mp3" />
 		</audio>
+		<canvas onclick="handlePlayMusic()" id="pinkboard"></canvas>
 
-
-		<canvas id="pinkboard"></canvas>
-		<h1 onclick="handlePlayMusic()">Yêu sói</h1>
 		<script>
-			//comment
 			function handlePlayMusic() {
 				const musicElement = document.getElementById("music");
 				console.dir(musicElement);
 				musicElement.play();
 			}
+			const elts = {
+				text1: document.getElementById("text1"),
+				text2: document.getElementById("text2"),
+			};
+
+			const texts = [
+				"Em",
+				"có",
+				"biết",
+				"là",
+				"anh",
+				"yêu",
+				"em",
+				"nhiều",
+				"lắm",
+				"không",
+				"sói",
+				"❤️❤️❤️",
+			];
+
+			const morphTime = 1;
+			const cooldownTime = 0.25;
+
+			let textIndex = texts.length - 1;
+			let time = new Date();
+			let morph = 0;
+			let cooldown = cooldownTime;
+
+			elts.text1.textContent = texts[textIndex % texts.length];
+			elts.text2.textContent = texts[(textIndex + 1) % texts.length];
+
+			function doMorph() {
+				morph -= cooldown;
+				cooldown = 0;
+
+				let fraction = morph / morphTime;
+
+				if (fraction > 1) {
+					cooldown = cooldownTime;
+					fraction = 1;
+				}
+
+				setMorph(fraction);
+			}
+
+			function setMorph(fraction) {
+				elts.text2.style.filter = `blur(${Math.min(
+					8 / fraction - 8,
+					100,
+				)}px)`;
+				elts.text2.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
+
+				fraction = 1 - fraction;
+				elts.text1.style.filter = `blur(${Math.min(
+					8 / fraction - 8,
+					100,
+				)}px)`;
+				elts.text1.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
+
+				elts.text1.textContent = texts[textIndex % texts.length];
+				elts.text2.textContent = texts[(textIndex + 1) % texts.length];
+			}
+
+			function doCooldown() {
+				morph = 0;
+
+				elts.text2.style.filter = "";
+				elts.text2.style.opacity = "100%";
+
+				elts.text1.style.filter = "";
+				elts.text1.style.opacity = "0%";
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+
+				let newTime = new Date();
+				let shouldIncrementIndex = cooldown > 0;
+				let dt = (newTime - time) / 1000;
+				time = newTime;
+
+				cooldown -= dt;
+
+				if (cooldown <= 0) {
+					if (shouldIncrementIndex) {
+						textIndex++;
+					}
+
+					doMorph();
+				} else {
+					doCooldown();
+				}
+			}
+
+			animate();
+
+			/*
+			 * Settings
+			 */
 
 			var settings = {
 				particles: {
@@ -77,7 +173,11 @@
 					size: 30, // particle size in pixels
 				},
 			};
-	
+
+			/*
+			 * RequestAnimationFrame polyfill by Erik Möller
+			 */
+
 			(function () {
 				var b = 0;
 				var c = ["ms", "moz", "webkit", "o"];
@@ -109,6 +209,12 @@
 					};
 				}
 			})();
+
+			/*
+                
+                 * Point class
+                
+                 */
 
 			var Point = (function () {
 				function Point(x, y) {
@@ -146,6 +252,12 @@
 
 				return Point;
 			})();
+
+			/*
+                
+                 * Particle class
+                
+                 */
 
 			var Particle = (function () {
 				function Particle() {
@@ -210,6 +322,12 @@
 				return Particle;
 			})();
 
+			/*
+                
+                 * ParticlePool class
+                
+                 */
+
 			var ParticlePool = (function () {
 				var particles,
 					firstActive = 0,
@@ -217,6 +335,8 @@
 					duration = settings.particles.duration;
 
 				function ParticlePool(length) {
+					// create and populate particle pool
+
 					particles = new Array(length);
 
 					for (var i = 0; i < particles.length; i++)
@@ -225,6 +345,8 @@
 
 				ParticlePool.prototype.add = function (x, y, dx, dy) {
 					particles[firstFree].initialize(x, y, dx, dy);
+
+					// handle circular queue
 
 					firstFree++;
 
@@ -237,6 +359,8 @@
 
 				ParticlePool.prototype.update = function (deltaTime) {
 					var i;
+
+					// update active particles
 
 					if (firstActive < firstFree) {
 						for (i = firstActive; i < firstFree; i++)
@@ -251,6 +375,8 @@
 							particles[i].update(deltaTime);
 					}
 
+					// remove inactive particles
+
 					while (
 						particles[firstActive].age >= duration &&
 						firstActive != firstFree
@@ -262,6 +388,8 @@
 				};
 
 				ParticlePool.prototype.draw = function (context, image) {
+					// draw active particles
+
 					if (firstActive < firstFree) {
 						for (i = firstActive; i < firstFree; i++)
 							particles[i].draw(context, image);
@@ -279,12 +407,20 @@
 				return ParticlePool;
 			})();
 
+			/*
+                
+                 * Putting it all together
+                
+                 */
+
 			(function (canvas) {
 				var context = canvas.getContext("2d"),
 					particles = new ParticlePool(settings.particles.length),
 					particleRate =
 						settings.particles.length / settings.particles.duration, // particles/sec
 					time;
+
+				// get point on heart with -PI <= t <= PI
 
 				function pointOnHeart(t) {
 					return new Point(
@@ -298,6 +434,8 @@
 					);
 				}
 
+				// creating the particle image using a dummy canvas
+
 				var image = (function () {
 					var canvas = document.createElement("canvas"),
 						context = canvas.getContext("2d");
@@ -305,6 +443,8 @@
 					canvas.width = settings.particles.size;
 
 					canvas.height = settings.particles.size;
+
+					// helper function to create the path
 
 					function to(t) {
 						var point = pointOnHeart(t);
@@ -320,6 +460,8 @@
 						return point;
 					}
 
+					// create the path
+
 					context.beginPath();
 
 					var t = -Math.PI;
@@ -329,7 +471,7 @@
 					context.moveTo(point.x, point.y);
 
 					while (t < Math.PI) {
-						t += 0.01;
+						t += 0.01; // baby steps!
 
 						point = to(t);
 
@@ -338,9 +480,13 @@
 
 					context.closePath();
 
+					// create the fill
+
 					context.fillStyle = "#ea80b0";
 
 					context.fill();
+
+					// create the image
 
 					var image = new Image();
 
@@ -349,7 +495,11 @@
 					return image;
 				})();
 
+				// render that thing!
+
 				function render() {
+					// next animation frame
+
 					requestAnimationFrame(render);
 
 					// update time
@@ -408,6 +558,22 @@
 
 					render();
 				}, 10);
+
+				// Redirect to Messenger
+				// 	setTimeout(function () {
+				// 		window.open(
+				// 			"https://www.facebook.com/messages/t/100014229402317",
+				// 			"_blank"
+				// 		);
+				// 	}, 10000);
+
+				// Open to Messenger
+				// 	setTimeout(function () {
+				// 		window.location.href =
+				// 			"https://www.facebook.com/messages/t/100014229402317";
+				// 	}, 30000);
+
+				// End
 			})(document.getElementById("pinkboard"));
 		</script>
 	</body>
